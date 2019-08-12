@@ -3,7 +3,6 @@ import numpy as np
 
 from enum import Enum
 from scipy import stats
-from typing import List
 
 
 class Strength(Enum):
@@ -84,13 +83,16 @@ class SurveyResult:
         self.owner = owner
         self.rater = rater
 
+
 def softmax(scores):
     e_scores = np.exp(scores)
     denominator = e_scores.sum()
     return e_scores / denominator
 
+
 def cross_entropy(p, q):
     return stats.entropy(p, q)
+
 
 def cognitive_dissonance_score(
     self_perception_scores,
