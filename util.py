@@ -33,6 +33,13 @@ class Strength(Enum):
     ZEST = 24
 
 
+ONEOFFS_TO_TOKEN = {
+    "appreciation of beauty & excellence": "appreciation",
+    "love of learning": "love_of_learning",
+    "self-regulation": "self_regulation",
+    "social intelligence": "social_intelligence",
+}
+
 TOKEN_TO_STRENGTH = {
     "appreciation": Strength.APPRECIATION,
     "bravery": Strength.BRAVERY,
