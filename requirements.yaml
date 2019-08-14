@@ -5,7 +5,10 @@ dependencies:
 - jupyter
 - numpy=1.15.2
 - scipy=1.1.0
+- scikit-learn
 - nb_conda
+- pandas
+- networkx
 - pip:
         - opencv-contrib-python==4.0.0.21
         - nelson
