@@ -150,16 +150,10 @@ def generate_via_strengths_graph(user_strengths):
 def generate_user_centric_graph(user_strengths, vip):
     G = nx.Graph()
     users = list(user_strengths.keys())
-    node_sizes = []
-    node_colors = []
     for name in users:
         G.add_node(name)
         if name == vip:
-            node_sizes.append(4000)
-            node_colors.append("lightgoldenrodyellow")
             continue
-        node_sizes.append(800)
-        node_colors.append("antiquewhite")
 
     def create_user_vec(single_user_strengths):
         user_vec = np.empty(24)
@@ -204,46 +198,58 @@ def generate_user_centric_graph(user_strengths, vip):
 
         coef12 = df[u1][u2]
         edge_colors.append(coef12)
-        edge_widths.append(15)
+        edge_widths.append(10)
 
     pos = nx.circular_layout(G)
     num_nodes = len(users) - 1
-    radian_delta = 2*np.pi/num_nodes
-    cur_radian = 0
+    rad_delta = 2 * np.pi/num_nodes
+    rad = 0
     name_coef = list(df[vip].to_dict().items())
     name_coef.sort(key=lambda t: t[1], reverse=True)
     for t in name_coef:
         name, coef = t
         if name == vip:
             continue
-        x = np.cos(cur_radian)
-        y = np.sin(cur_radian)
-        cur_radian += radian_delta
+        x = np.cos(rad)
+        y = np.sin(rad)
+        # radius = np.sqrt(x**2 + y**2)
+        # radius *= 0.8
+        # new_x, new_y = radius * np.cos(rad), radius * np.sin(rad)
+        # pos[name] = np.array([new_x, new_y])
+        #
+        rad += rad_delta
         pos[name] = np.array([x, y])
 
     pos[vip] = np.array([0.0, 0.0])
-    colors = ["lightgoldenrodyellow" if n == vip else "antiquewhite" for n in G.nodes]
-    sizes = [4000 if n == vip else 800 for n in G.nodes]
-
     cmap = plt.cm.get_cmap("plasma")
+    colors = []
+    print(G.nodes)
+    for n in G.nodes:
+        if vip == n:
+            colors.append(1.0)
+            continue
+        colors.append(df[vip][n])
 
-    nx.draw(G, pos, with_labels=False, node_color=colors, node_size=sizes, edge_color=edge_colors,
-            width=edge_widths, font_weight='bold', edge_cmap=cmap, edge_vmin=-1.0, edge_vmax=1.0)
+    sizes = [8000 if n == vip else 800 for n in G.nodes]
+
+    nx.draw(G, pos, with_labels=False, node_color=colors, node_size=sizes, edge_color=edge_colors, cmap=cmap,
+            vmin=-1.0, vmax=1.0, width=edge_widths, font_weight='bold', edge_cmap=cmap, edge_vmin=-1.0, edge_vmax=1.0)
 
     for name in pos:
         if name == vip:
             continue
-        x, y = pos[name][0], pos[name][1]
-
-        # Use arctan2 instead of arctan. Theory here: https://stackoverflow.com/a/12011762
-        rad = np.arctan2(y, x)
-        radius = np.sqrt(x**2 + y**2)
-        radius *= 1.075
-        new_x, new_y = radius * np.cos(rad), radius * np.sin(rad)
-        pos[name] = np.array([new_x, new_y])
+        pos[name][1] += 0.05
+    #     x, y = pos[name][0], pos[name][1]
+    #
+    #     # Use arctan2 instead of arctan. Theory here: https://stackoverflow.com/a/12011762
+    #     rad = np.arctan2(y, x)
+    #     radius = np.sqrt(x**2 + y**2)
+    #     radius *= 1.075
+    #     new_x, new_y = radius * np.cos(rad), radius * np.sin(rad)
+    #     pos[name] = np.array([new_x, new_y])
 
     pos[vip] = np.array([0.0, 0.0])
 
     nx.draw_networkx_labels(G, pos, with_labels=True, font_color='black')
     filename = "_".join(vip.split(" "))
-    plt.savefig(filename + ".png", figsize=(300, 300))
+    plt.savefig(filename + ".pdf", figsize=(300, 300))
