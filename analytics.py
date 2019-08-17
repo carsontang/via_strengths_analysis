@@ -219,7 +219,7 @@ def generate_user_centric_graph(user_strengths, vip):
     pos[vip] = np.array([0.0, 0.0])
     cmap = plt.cm.get_cmap("plasma")
     colors = []
-    print(G.nodes)
+
     for n in G.nodes:
         if vip == n:
             colors.append(1.0)
