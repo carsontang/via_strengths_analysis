@@ -3,6 +3,10 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
+from constants import (
+    DRAW_LABELS,
+)
+
 
 def shared_top3_adj(user_strengths):
     users = list(user_strengths.keys())
@@ -147,20 +151,14 @@ def generate_via_strengths_graph(user_strengths):
     plt.savefig('graph.png', figsize=(200, 200))
 
 
-def generate_user_centric_graph(user_strengths, vip):
-    G = nx.Graph()
-    users = list(user_strengths.keys())
-    for name in users:
-        G.add_node(name)
-        if name == vip:
-            continue
+def create_user_vec(single_user_strengths):
+    user_vec = np.empty(24)
+    for i, strength in enumerate(single_user_strengths):
+        user_vec[strength.value - 1] = i
+    return user_vec
 
-    def create_user_vec(single_user_strengths):
-        user_vec = np.empty(24)
-        for i, strength in enumerate(single_user_strengths):
-            user_vec[strength.value - 1] = i
-        return user_vec
 
+def user_coefficients(user_strengths):
     users = list(user_strengths.keys())
 
     d = {}
@@ -183,6 +181,47 @@ def generate_user_centric_graph(user_strengths, vip):
             corrmatrix = np.corrcoef(user_vec, other_user_vec)
             coefficient = corrmatrix[0][1]
             df[user][other_user] = coefficient
+    return df
+
+
+def ccw_dec_coef_layout(G, vip, user_coefficients):
+    """
+    Users are positioned around a circle. From 0 radians to 2 * np.pi radians,
+    in counterclockwise motion (ccw), users of decreasing coefficient are positioned.
+    The VIP (very important person) is in the center.
+    """
+    pos = nx.circular_layout(G)
+    num_nodes = len(user_coefficients.index.values) - 1
+    rad_delta = 2 * np.pi/num_nodes
+    rad = 0
+    name_coef = list(user_coefficients[vip].to_dict().items())
+    name_coef.sort(key=lambda t: t[1], reverse=True)
+    for t in name_coef:
+        name, coef = t
+        if name == vip:
+            continue
+        x = np.cos(rad)
+        y = np.sin(rad)
+
+        rad += rad_delta
+        pos[name] = np.array([x, y])
+
+    pos[vip] = np.array([0.0, 0.0])
+    return pos
+
+
+def draw_user_centric_graph(user_strengths, vip, ax=None):
+    if not ax:
+        ax = plt.gca()
+
+    G = nx.Graph()
+    users = list(user_strengths.keys())
+    for name in users:
+        G.add_node(name)
+        if name == vip:
+            continue
+
+    df = user_coefficients(user_strengths)
 
     edge_colors = []
     edge_widths = []
@@ -200,23 +239,8 @@ def generate_user_centric_graph(user_strengths, vip):
         edge_colors.append(coef12)
         edge_widths.append(10)
 
-    pos = nx.circular_layout(G)
-    num_nodes = len(users) - 1
-    rad_delta = 2 * np.pi/num_nodes
-    rad = 0
-    name_coef = list(df[vip].to_dict().items())
-    name_coef.sort(key=lambda t: t[1], reverse=True)
-    for t in name_coef:
-        name, coef = t
-        if name == vip:
-            continue
-        x = np.cos(rad)
-        y = np.sin(rad)
+    pos = ccw_dec_coef_layout(G, vip, df)
 
-        rad += rad_delta
-        pos[name] = np.array([x, y])
-
-    pos[vip] = np.array([0.0, 0.0])
     cmap = plt.cm.get_cmap("plasma")
     colors = []
 
@@ -228,8 +252,22 @@ def generate_user_centric_graph(user_strengths, vip):
 
     sizes = [8000 if n == vip else 800 for n in G.nodes]
 
-    nx.draw(G, pos, with_labels=False, node_color=colors, node_size=sizes, edge_color=edge_colors, cmap=cmap,
-            vmin=-1.0, vmax=1.0, width=edge_widths, font_weight='bold', edge_cmap=cmap, edge_vmin=-1.0, edge_vmax=1.0)
+    nx.draw(
+        G, pos,
+        with_labels=False,
+        node_color=colors,
+        node_size=sizes,
+        cmap=cmap,
+        vmin=-1.0,
+        vmax=1.0,
+        edge_color=edge_colors,
+        edge_vmin=-1.0,
+        edge_vmax=1.0,
+        width=edge_widths,
+        font_weight='bold',
+        edge_cmap=cmap,
+        ax=ax,
+    )
 
     for name in pos:
         if name == vip:
@@ -238,6 +276,14 @@ def generate_user_centric_graph(user_strengths, vip):
 
     pos[vip] = np.array([0.0, 0.0])
 
-    nx.draw_networkx_labels(G, pos, with_labels=True, font_color='black')
-    filename = "_".join(vip.split(" "))
-    plt.savefig(filename + ".pdf", figsize=(300, 300))
+    nx.draw_networkx_labels(
+        G, pos,
+        with_labels=True,
+        font_color='black',
+        ax=ax
+    )
+    print("here 2")
+    G.clear()
+    #
+    # filename = "_".join(vip.split(" "))
+    # plt.savefig(filename + ".pdf", figsize=(300, 300))

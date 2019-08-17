@@ -2,6 +2,15 @@ import os.path
 
 from enum import Enum
 
+"""
+Drawing configs
+"""
+DRAW_LABELS = True
+SET_WIDTH = True
+EDGE_WIDTH = 1
+VIP_OUTBOUND_EDGE_WIDTH = 5
+
+
 class Strength(Enum):
     APPRECIATION = 1
     BRAVERY = 2
