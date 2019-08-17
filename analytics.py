@@ -212,11 +212,7 @@ def generate_user_centric_graph(user_strengths, vip):
             continue
         x = np.cos(rad)
         y = np.sin(rad)
-        # radius = np.sqrt(x**2 + y**2)
-        # radius *= 0.8
-        # new_x, new_y = radius * np.cos(rad), radius * np.sin(rad)
-        # pos[name] = np.array([new_x, new_y])
-        #
+
         rad += rad_delta
         pos[name] = np.array([x, y])
 
@@ -239,14 +235,6 @@ def generate_user_centric_graph(user_strengths, vip):
         if name == vip:
             continue
         pos[name][1] += 0.05
-    #     x, y = pos[name][0], pos[name][1]
-    #
-    #     # Use arctan2 instead of arctan. Theory here: https://stackoverflow.com/a/12011762
-    #     rad = np.arctan2(y, x)
-    #     radius = np.sqrt(x**2 + y**2)
-    #     radius *= 1.075
-    #     new_x, new_y = radius * np.cos(rad), radius * np.sin(rad)
-    #     pos[name] = np.array([new_x, new_y])
 
     pos[vip] = np.array([0.0, 0.0])
 
